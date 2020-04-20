@@ -1,6 +1,9 @@
 #!/bin/bash
+
+#-------------------------------------------------------------------------------
 # Alias
 #-------------------------------------------------------------------------------
+
 alias cp='cp -ivn'                                              # Preferred 'cp' implementation
 alias mv='mv -iv'                                               # Preferred 'mv' implementation
 alias rm='rm -i'                                                # Preferred 'rm' implementation
@@ -18,17 +21,16 @@ alias path='echo -e ${PATH//:/\\n}'                             # path : echo al
 alias nowtime='date +"%T"'                                      # get time in HH:MM:SS format
 alias nowdate='date +"%d-%m-%Y"'                                # get date in DD-MM-AAAA format
 alias cleanupDS="find . -type f -name '*.DS_Store' -ls -delete" # cleanupDS:  Recursively delete .DS_Store files
-alias mysql='mysql --user=root --password'
+alias desktop='cd ${HOME}/Desktop/'                             # desktop: go to Desktop directory
+alias document='cd ${HOME}/Documents/'                          # document: go to Documents directory
+alias downloads='cd ${HOME}/Downloads/'                         # downloads: go to Downloads directory
 
+#-------------------------------------------------------------------------------
 # Change Prompt [[ Working directory @ hostname (user) [time at date] ]]
 #-------------------------------------------------------------------------------
 export PS1="________________________________________________________________________________\n| \w @ \h (\u) [$( nowtime ) at $( nowdate )] \n| => "
 
-# Set Paths
 #-------------------------------------------------------------------------------
-export PATH="${PATH}:"
-
-
 # Fonctions
 #-------------------------------------------------------------------------------
 
@@ -101,7 +103,6 @@ xelatex_compilation () {
 	fi
 }
 
-
 timezone (){
 	SANDIEGO=$( TZ=/usr/share/zoneinfo/US/Pacific date -R )
 	LYON=$( TZ=/usr/share/zoneinfo/CET date -R )
@@ -111,6 +112,106 @@ timezone (){
 	echo ""
 }
 
+# Markdown to pdf using pandoc
+md2pdf() {
+	# CMD="pandoc ${1} -N -V geometry:\"top=2cm, bottom=2cm, left=2cm, right=2cm\" --output=${1}.pdf"
+	CMD="pandoc ${1} --template sungenomics.latex -N -V geometry:\"top=2cm, bottom=2cm, left=2cm, right=2cm\" --listings --output=${1}.pdf"
+	echo -ne "> Command: ${CMD}\n"
+	eval ${CMD}
+	open ${1}.pdf
+}
+
+# Remove launch agents
+remove_launch_agents () {
+
+	for AGENT in $( command ls ~/Library/LaunchAgents/* /Library/LaunchAgents/* /Library/LaunchDaemons/* ) ; do
+	echo ${AGENT}
+	command rm ${AGENT}
+	done
+
+}
+
+# Update homebrew
+update_homebrew () {
+
+	echo
+	echo "Update Homebrew"
+	echo "--> brew update"
+	brew update
+	echo "--> brew upgrade"
+	brew upgrade
+	echo "--> brew cask upgrade --greedy"
+	brew cask upgrade --greedy
+	echo "--> brew cleanup"
+	brew cleanup
+	echo "--> brew cask doctor"
+	brew cask doctor
+	echo "--> brew doctor"
+	brew doctor
+	echo
+
+}
+
+update_gem () {
+
+	echo
+	echo "Update Gem (Ruby)"
+	echo "--> gem update --system"
+	sudo gem update --system
+	echo "--> gem update"
+	sudo gem update
+	echo "--> gem cleanup"
+	sudo gem cleanup
+	echo
+
+}
+
+# Update pip
+update_pip () {
+
+	echo
+	echo "Update pip (python)"
+	pip list --format=freeze | awk '{print $1;}' | xargs -n1 pip install -U
+	echo
+
+}
+
+update_all (){
+	
+	update_homebrew
+	update_gem
+	update_pip
+
+}
+
+music_search (){
+
+	WORDS="${@}"
+
+	find ${MUSIC_FOLDERS} -type f -name '*.mp3' -or -name '*.flac' > "/tmp/music_search.log1"
+
+	for WORD in ${WORDS} ; do 
+
+		grep -w -i ${WORD} "/tmp/music_search.log1" > "/tmp/music_search.log2"
+
+		command mv "/tmp/music_search.log2" "/tmp/music_search.log1"
+	
+	done
+
+	cat "/tmp/music_search.log1" 
+
+	command rm -f "/tmp/music_search.log1"
+
+}
+
+music_play (){
+
+	tr '\n' '\0' | xargs -0 -L1 open
+
+}
+
+#-------------------------------------------------------------------------------
 # Personnal
 #-------------------------------------------------------------------------------
-source ~/.bash_perso       # Personnal bash profile
+
+source ~/.bash_perso # Personnal bash profile
